@@ -58,6 +58,9 @@ passport.use(new LocalStrategy({
         if(user){
             console.log(user);
 
+            //여기에서 토큰 요청
+
+
             //아이디가 다를때
             if (id !== user.email)
                 return done(null, false, { message: '아이디가 다르다' });
