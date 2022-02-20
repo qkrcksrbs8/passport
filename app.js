@@ -136,13 +136,12 @@ app.get('/logout',(req,res)=>{
 
 const resultUser = async (req) => {
 
-    const xxx = async () => {
+    const result = async () => {
         const fetch = (...args) => import('node-fetch')
             .then(({default: fetch}) => fetch(...args));
-
-        const url = {
+        const url = "http://localhost:8080/login";
+        const params = {
             method: "POST",
-            // url: "http://localhost:8080/login",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -152,28 +151,22 @@ const resultUser = async (req) => {
             }),
         }
 
-        return await
-        fetch("http://localhost:8080/login",url)
-            // .then(data => data.json())
+        return await fetch(url, params)
             .then(data => {
                 if (200 != data.status) return '계정정보가 일치하지 않습니다.';
                 let accessToken = generateAccessToken(user);
                 let refreshToken = generateRefreshToken(user);
                 return { accessToken, refreshToken };
             })
-            .catch((err) => {
-                return '오류입니다';
-            });
+            .catch((err) => { return '오류입니다'; });
     }
-
-    return xxx();
+    return result();
 }
 
 app.get("/test", (req, res) => {
     console.log('test 시작');
     const user = async () => { return await resultUser(req); }
-    return user()
-        .then((data) => { res.send(data);})
+    return user().then((data) => { res.send(data);})
 })
 
 // access token의 유효성 검사
@@ -207,9 +200,7 @@ app.post("/refresh", (req, res) => {
         process.env.REFRESH_TOKEN_SECRET,
         (error, user) => {
             if (error) return res.sendStatus(403);
-
             const accessToken = generateAccessToken(user.id);
-
             res.json({ accessToken });
         }
     );
