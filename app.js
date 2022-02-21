@@ -61,12 +61,9 @@ passport.use(new LocalStrategy({
             //여기에서 토큰 요청
 
 
-            //아이디가 다를때
-            if (id !== user.email)
+            //아이디나 비밀번호가 다를 때. 보안 때문에 아이디/비밀번호 각각 미일치 여부를 보내주지 않음
+            if ((id !== user.email) || (password !== user.password))
                 return done(null, false, { message: '아이디가 다르다' });
-            //비밀번호가 다를때
-            else if (password !== user.password)
-                return done(null, false, { message: '비번이 다르다' });
             //아이디, 비밀번호 모두 맞을 경우
             return done(null, user);
         }
@@ -117,6 +114,56 @@ app.get('/logout',(req,res)=>{
     });
 });
 
+const resultUser = async () => {
+
+    const xxx = async () => {
+        const fetch = (...args) => import('node-fetch')
+            .then(({default: fetch}) => fetch(...args));
+
+        const url = {
+            method: "POST",
+            // url: "http://localhost:8080/login",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                id: "admin",
+                pw: "1234",
+            }),
+        }
+
+        return await
+        fetch("http://localhost:8080/login",url)
+            // .then(data => data.json())
+            .then(data => {
+                if (200 != data.status) return '계정정보가 일치하지 않습니다.';
+                // let accessToken = data.accessToken;
+                // let refreshToken = data.refreshToken;
+                // console.log('accessToken: ', accessToken);
+                // console.log('refreshToken', refreshToken);
+                return '정상';
+            })
+            .catch((err) => {
+                return '오류입니다';
+            });
+    }
+
+    return xxx();
+}
+
+app.get("/test", (req, res) => {
+    console.log('test 시작');
+
+    const user = async () => {
+        return await resultUser();
+    }
+
+    return user()
+        .then((data) => {
+            console.log(data);
+            res.send(data);
+        });
+})
 
 //포트 연결
 app.listen(3000,()=>console.log(`http://localhost:3000`));
