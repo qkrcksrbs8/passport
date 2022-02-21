@@ -1,9 +1,15 @@
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
-
+const jwt = require('jsonwebtoken');
+const bodyParser = require("body-parser");
 const fileStore = require('session-file-store')(session);
 const app = express();
+process.env.ACCESS_TOKEN_SECRET='pcg_qweqsdaasdqweasedwqdsadczxdcz';
+process.env.REFRESH_TOKEN_SECRET='pcg_zxcasdqwexzczxdqeqwdzxcasdqwe';
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 //Middle Ware list
 app.use(express.urlencoded({extended:false}));
@@ -15,6 +21,20 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+// access token을 secret key 기반으로 생성
+const generateAccessToken = (id) => {
+    return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "15m",
+    });
+};
+
+// refersh token을 secret key  기반으로 생성
+const generateRefreshToken = (id) => {
+    return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: "180 days",
+    });
+};
 
 //사용자 정보 세션 읽기, 쓰기
 passport.serializeUser(function(user, done) {   //쓰기
@@ -114,7 +134,7 @@ app.get('/logout',(req,res)=>{
     });
 });
 
-const resultUser = async () => {
+const resultUser = async (req) => {
 
     const xxx = async () => {
         const fetch = (...args) => import('node-fetch')
@@ -127,8 +147,8 @@ const resultUser = async () => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                id: "admin",
-                pw: "1234",
+                id: req.body.id,
+                pw: req.body.pw,
             }),
         }
 
@@ -137,11 +157,9 @@ const resultUser = async () => {
             // .then(data => data.json())
             .then(data => {
                 if (200 != data.status) return '계정정보가 일치하지 않습니다.';
-                // let accessToken = data.accessToken;
-                // let refreshToken = data.refreshToken;
-                // console.log('accessToken: ', accessToken);
-                // console.log('refreshToken', refreshToken);
-                return '정상';
+                let accessToken = generateAccessToken(user);
+                let refreshToken = generateRefreshToken(user);
+                return { accessToken, refreshToken };
             })
             .catch((err) => {
                 return '오류입니다';
@@ -153,10 +171,55 @@ const resultUser = async () => {
 
 app.get("/test", (req, res) => {
     console.log('test 시작');
-    const user = async () => { return await resultUser(); }
+    const user = async () => { return await resultUser(req); }
     return user()
         .then((data) => { res.send(data);})
 })
+
+// access token의 유효성 검사
+const authenticateAccessToken = (req, res, next) => {
+    let authHeader = req.headers["authorization"];
+    let token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        console.log("wrong token format or token is not sended");
+        return res.sendStatus(400);
+    }
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, user) => {
+        if (error) {
+            console.log(error);
+            return res.sendStatus(403);
+        }
+
+        req.user = user;
+        next();
+    });
+};
+
+// access token을 refresh token 기반으로 재발급
+app.post("/refresh", (req, res) => {
+    let refreshToken = req.body.refreshToken;
+    if (!refreshToken) return res.sendStatus(401);
+
+    jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET,
+        (error, user) => {
+            if (error) return res.sendStatus(403);
+
+            const accessToken = generateAccessToken(user.id);
+
+            res.json({ accessToken });
+        }
+    );
+});
+
+// access token 유효성 확인을 위한 예시 요청
+app.get("/user", authenticateAccessToken, (req, res) => {
+    console.log(req.user);
+    res.json(users.filter((user) => user.id === req.user.id));
+});
 
 //포트 연결
 app.listen(3000,()=>console.log(`http://localhost:3000`));
