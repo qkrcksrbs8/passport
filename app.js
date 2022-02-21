@@ -101,16 +101,6 @@ app.get('/join',(req,res)=>{
     res.send(page);
 });
 
-//회원가입 처리 Post : 예제를 위해 간단 저장 방식으로 구현
-var user = {};
-app.post('/join',(req,res)=>{
-    user.email = req.body.email;
-    user.password = req.body.password;
-    user.name=req.body.name;
-    //로그인 페이지로 이동
-    res.redirect('/login');
-});
-
 //로그 아웃 처리
 app.get('/logout',(req,res)=>{
     //passport 정보 삭제
@@ -122,27 +112,6 @@ app.get('/logout',(req,res)=>{
         res.redirect('/');
     });
 });
-
-// access token의 유효성 검사
-const authenticateAccessToken = (req, res, next) => {
-    let authHeader = req.headers["authorization"];
-    let token = authHeader && authHeader.split(" ")[1];
-
-    if (!token) {
-        console.log("wrong token format or token is not sended");
-        return res.sendStatus(400);
-    }
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, user) => {
-        if (error) {
-            console.log(error);
-            return res.sendStatus(403);
-        }
-
-        req.user = user;
-        next();
-    });
-};
 
 // // access token을 refresh token 기반으로 재발급
 // app.post("/refresh", (req, res) => {
@@ -159,12 +128,6 @@ const authenticateAccessToken = (req, res, next) => {
 //         }
 //     );
 // });
-
-// access token 유효성 확인을 위한 예시 요청
-app.get("/user", authenticateAccessToken, (req, res) => {
-    console.log(req.user);
-    res.json(users.filter((user) => user.id === req.user.id));
-});
 
 //포트 연결
 app.listen(3000,()=>console.log(`http://localhost:3000`));
