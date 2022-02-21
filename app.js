@@ -153,16 +153,9 @@ const resultUser = async () => {
 
 app.get("/test", (req, res) => {
     console.log('test 시작');
-
-    const user = async () => {
-        return await resultUser();
-    }
-
+    const user = async () => { return await resultUser(); }
     return user()
-        .then((data) => {
-            console.log(data);
-            res.send(data);
-        });
+        .then((data) => { res.send(data);})
 })
 
 //포트 연결
