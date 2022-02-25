@@ -4,16 +4,15 @@ const app = express();
 process.env.ACCESS_TOKEN_SECRET='pcg_qweqsdaasdqweasedwqdsadczxdcz';
 process.env.REFRESH_TOKEN_SECRET='pcg_zxcasdqwexzczxdqeqwdzxcasdqwe';
 
+app.use(express.urlencoded({extended:false}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 const router = require('./app/src/routes/index');
-// const login = require('./app/src/routes/login');
-// app.use('/', login);
+const log = require('./app/src/routes/login');
+app.use('/', log);
 app.use('/access', router);
 
-//Middle Ware list
-app.use(express.urlencoded({extended:false}));
 
 // // access token을 refresh token 기반으로 재발급
 // app.post("/refresh", (req, res) => {

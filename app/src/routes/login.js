@@ -25,7 +25,7 @@ router.get('/login',(req,res)=>{
 
 //로그인 처리 (Passport)
 router.post('/login',(req, res) => {
-
+    res.redirect('/');
 });
 
 
@@ -82,3 +82,4 @@ const getPage = (title, content, auth) =>{
     `;
 }
 
+module.exports = router;
